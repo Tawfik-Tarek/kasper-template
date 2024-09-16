@@ -1,156 +1,121 @@
-// image preloaded
-let preloadedImages = [];
+// Preload images
+const preloadedImages = [];
 for (let j = 1; j <= 3; j++) {
-  let img = new Image();
+  const img = new Image();
   img.src = `./images/slider/bg${j}.jpg`;
   preloadedImages.push(img);
 }
 
-let landing = document.querySelector(".landing");
-let rightSlider = document.querySelector(".right-click");
-let leftSlider = document.querySelector(".left-click");
+const landing = document.querySelector(".landing");
+const rightSlider = document.querySelector(".right-click");
+const leftSlider = document.querySelector(".left-click");
 let i = 2;
-function m(ul, index) {
-  ul.forEach((li) => {
-    li.classList.remove("active");
-  });
+
+// Update active class
+function updateActiveClass(ul, index) {
+  ul.forEach((li) => li.classList.remove("active"));
   ul[index].classList.add("active");
 }
 
+// Slider event listeners
 rightSlider.addEventListener("click", () => {
-  if (i >= 1 && i <= 2) {
-    leftSlider.style.cursor = "pointer";
-    m(ul, i);
-    landing.style.backgroundImage = `url("${preloadedImages[i].src}")`;
-    if (i === 2) {
-      rightSlider.style.cursor = "auto";
-    }
+  if (i < 2) {
+    updateActiveClass(ul, i + 1);
+    landing.style.backgroundImage = `url("${preloadedImages[i + 1].src}")`;
     i++;
+    leftSlider.style.cursor = "pointer";
+    if (i === 2) rightSlider.style.cursor = "auto";
   }
 });
 
 leftSlider.addEventListener("click", () => {
-  if (i > 1 && i <= 3) {
-    m(ul, i - 2);
-    rightSlider.style.cursor = "pointer";
-    landing.style.backgroundImage = `url("${preloadedImages[i - 2].src}")`;
-    if (i === 2) {
-      leftSlider.style.cursor = "auto";
-    }
+  if (i > 1) {
+    updateActiveClass(ul, i - 2);
+    landing.style.backgroundImage = `url("${preloadedImages[i - 1].src}")`;
     i--;
+    rightSlider.style.cursor = "pointer";
+    if (i === 1) leftSlider.style.cursor = "auto";
   }
 });
 
-let ul = document.querySelectorAll(".landing .shape li");
+// Update slider on click
+const ul = document.querySelectorAll(".landing .shape li");
 ul.forEach((li) => {
   li.addEventListener("click", () => {
-    ul.forEach((li) => {
-      li.classList.remove("active");
-    });
-    i = parseInt(li.getAttribute("index")) - 1;
-    ul[i].classList.add("active");
-    if (i === 2) {
-      rightSlider.style.cursor = "auto";
-      leftSlider.style.cursor = "pointer";
-    } else if (i === 0) {
-      leftSlider.style.cursor = "auto";
-    } else {
-      rightSlider.style.cursor = "pointer";
-      leftSlider.style.cursor = "pointer";
-    }
+    const index = parseInt(li.getAttribute("index")) - 1;
+    updateActiveClass(ul, index);
+    i = index;
     landing.style.backgroundImage = `url("${preloadedImages[i].src}")`;
+    rightSlider.style.cursor = i === 2 ? "auto" : "pointer";
+    leftSlider.style.cursor = i === 0 ? "auto" : "pointer";
   });
 });
 
-//end active classes
+// Portfolio filter
+const portfolioLis = document.querySelectorAll(".portfolio nav ul li");
+const portfolioDivs = document.querySelectorAll(".gallary .com");
 
-// start portfolio
-//add active and show elements
-let portfolioLis = document.querySelectorAll(".portfolio nav ul li"),
-  portfolioDivs = document.querySelectorAll(".gallary .com");
 portfolioLis.forEach((li) => {
   li.addEventListener("click", () => {
-    portfolioLis.forEach((li) => {
-      li.classList.remove("active");
-    }),
-      portfolioDivs.forEach((div) => {
-        div.style.display = "none";
-      }),
-      li.classList.add("active");
+    portfolioLis.forEach((li) => li.classList.remove("active"));
+    portfolioDivs.forEach((div) => div.style.display = "none");
+    li.classList.add("active");
     document.querySelectorAll(li.dataset.kind).forEach((div) => {
       div.style.display = "flex";
     });
   });
 });
-// end portfolio
-// start count
-let countDiv = document.querySelector(".count");
-let targetEls = document.querySelectorAll(".count .items .numbers h1");
-let run = true;
-const couterMethod = (ele) => {
-  let targetNum = ele.dataset.count;
-  const inter = setInterval(() => {
-    ele.textContent++;
-    if (ele.textContent == targetNum) {
-      clearInterval(inter);
+
+// Counter using Intersection Observer
+const countDiv = document.querySelector(".count");
+const targetEls = document.querySelectorAll(".count .items .numbers h1");
+
+const countUp = (ele) => {
+  const targetNum = parseInt(ele.dataset.count, 10);
+  let currentNum = 0;
+  const interval = setInterval(() => {
+    if (currentNum >= targetNum) {
+      clearInterval(interval);
+    } else {
+      ele.textContent = ++currentNum;
     }
   }, 2000 / targetNum);
 };
-window.onscroll = () => {
-  if (window.scrollY >= countDiv.offsetTop - 500) {
-    if (run) {
-      targetEls.forEach((ele) => couterMethod(ele));
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      targetEls.forEach(countUp);
+      observer.unobserve(entry.target);
     }
-    run = false;
-  }
-};
-// end count
-
-//links active
-let links = document.querySelectorAll(".links li a");
-links.forEach((link) => {
-  link.addEventListener("click", () => {
-    links.forEach((link) => {
-      link.classList.remove("active");
-    });
-    link.classList.add("active");
   });
-});
-//end links active
+}, { threshold: 0.1 });
 
-// start making header and nav links flexible
+observer.observe(countDiv);
 
-let header = document.querySelector("header");
-let sections = document.querySelectorAll(".section");
+// Navigation link active
+const header = document.querySelector("header");
+const sections = document.querySelectorAll(".section");
 const navLinks = document.querySelectorAll(".parent .container nav ul li a");
-window.onscroll = () => {
-  if (window.scrollY > 0) {
-    header.classList.add("active");
-  } else {
-    header.classList.remove("active");
-  }
 
-  var current = "";
+window.addEventListener("scroll", () => {
+  header.classList.toggle("active", window.scrollY > 0);
 
+  let current = "";
   sections.forEach((section) => {
     const sectionTop = section.offsetTop;
-    if (scrollY >= sectionTop - 100) {
+    if (window.scrollY >= sectionTop - 100) {
       current = section.getAttribute("id");
     }
   });
 
   navLinks.forEach((link) => {
-    link.classList.remove("active");
-    if (link.classList.contains(current + "-link")) {
-      link.classList.add("active");
-    }
+    link.classList.toggle("active", link.classList.contains(`${current}-link`));
   });
-};
-// end header & nav links
+});
 
-// start bar menu
-let bar = document.querySelector(".bar1");
-
+// Mobile menu toggle
+const bar = document.querySelector(".bar1");
 bar.addEventListener("click", () => {
   document.querySelector(".links").classList.toggle("active");
   bar.classList.toggle("active");
